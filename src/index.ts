@@ -8,21 +8,24 @@ import { upload_task } from "./tasks/upload_task"
 
 const app: Express = express()
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-      cb(null, '/tmp/image-uploader')
-  },
-  filename: function (req, file, cb) {
-      cb(null, getFileName(file.originalname))
-  }
-})
+// ファイル保存用
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//       cb(null, '/tmp/image-uploader')
+//   },
+//   filename: function (req, file, cb) {
+//       cb(null, getFileName(file.originalname))
+//   }
+// })
+
+const ram = multer.memoryStorage()
 
 function getFileName(filename: string) {
   const [front, ...rears] = filename.split(".")
   return `${front}:${new Date().toISOString()}${rears.length ? "." : ""}${rears.join(".")}`
 }
-
-const upload = multer({ storage: storage })
+const _3MB = 3 * 1024 * 1024
+const upload = multer({ storage: ram , limits:{fileSize:_3MB}})
 
 const port = process.env.PORT || 3000
 
