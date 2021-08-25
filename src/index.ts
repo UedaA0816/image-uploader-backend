@@ -5,27 +5,34 @@ if (process.env.NODE_ENV !== 'production') require('dotenv').config()
 import { logger } from "./logger";
 
 import { upload_task } from "./tasks/upload_task"
+import { multer_error_handling } from './tasks/multer_error_handling';
+
+import { makeTempDirectory } from './utils'
 
 const app: Express = express()
 
+const tempDirectory = '/tmp/image-uploader';
+makeTempDirectory(tempDirectory)
+
 // ファイル保存用
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//       cb(null, '/tmp/image-uploader')
-//   },
-//   filename: function (req, file, cb) {
-//       cb(null, getFileName(file.originalname))
-//   }
-// })
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+      cb(null, tempDirectory)
+  },
+  filename: function (req, file, cb) {
+      cb(null, getFileName(file.originalname))
+  }
+})
 
 const ram = multer.memoryStorage()
 
 function getFileName(filename: string) {
-  const [front, ...rears] = filename.split(".")
-  return `${front}:${new Date().toISOString()}${rears.length ? "." : ""}${rears.join(".")}`
+  
+  return new Date().getTime() + '-' + filename
 }
 const _3MB = 3 * 1024 * 1024
-const upload = multer({ storage: ram , limits:{fileSize:_3MB}})
+const upload = multer({ storage: storage})
+// const upload = multer({ storage: ram , limits:{fileSize:_3MB}})
 
 const port = process.env.PORT || 3000
 
@@ -51,7 +58,10 @@ app.use((req, res, next) => {
 const router: Router = express.Router()
 
 const fieldName = "file"
+const upload_error_handling = (res:Request,req:Response)=>upload.single(fieldName)(res,req,multer_error_handling)
+
 router.post('/upload',upload.single(fieldName), upload_task)
+// router.post('/upload',upload_error_handling, upload_task)
 
 app.use(router)
 
