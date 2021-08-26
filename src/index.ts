@@ -8,6 +8,10 @@ import { upload_task } from "./tasks/upload_task"
 import { multer_error_handling } from './tasks/multer_error_handling';
 
 import { makeTempDirectory } from './utils'
+import AWS from 'aws-sdk';
+
+const credentials = new AWS.SharedIniFileCredentials({profile: 'nvc-study'});
+AWS.config.credentials = credentials;
 
 const app: Express = express()
 

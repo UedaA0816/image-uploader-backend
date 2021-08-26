@@ -1,18 +1,47 @@
 import { Request,Response } from "express";
+import * as AWS from "aws-sdk";
 import { logger } from "./../logger";
+import { GetObjectRequest, PutObjectOutput, PutObjectRequest } from "aws-sdk/clients/s3";
+import * as fs from "fs";
 
-import { sleep } from "./../utils";
 
 export const upload_task = async (req:Request, res:Response) => {
   logger.debug(req.file)
 
-  const isFileImage = req.file?.mimetype.includes("image")
+  const file = req.file
+  
+  if( file == undefined ){
+    res.status(403).send({code:40300})
+    return
+  }
+  logger.debug(file)
+  
+
+  const isFileImage = file.mimetype.includes("image")
   if(!isFileImage) {
     res.status(403).send({code:40301})
     return
   }
 
-  await sleep(2000)
-  
-  res.send({code:20000,url:req.file?.path})
+  const s3: AWS.S3 = new AWS.S3();
+  const bucket = process.env.AWS_BUCKET_NAME||""
+  const params:PutObjectRequest = {
+    Bucket:bucket,
+    Key:file.filename,
+    Body:fs.readFileSync(file.path),
+    ACL:"public-read"
+  }
+  s3.putObject(params,(err, data) => {
+    if (err) {
+      logger.debug(err)
+      res.status(500).send({code:50000})
+      return
+    }
+    
+    const resource_url = `https://${bucket}.s3.ap-northeast-1.amazonaws.com/${file.filename}`
+
+    res.send({code:20000,url:resource_url})
+    
+  });
+
 }
