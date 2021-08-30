@@ -7,3 +7,5 @@ export const makeTempDirectory = (path:string) => {
     fs.mkdirSync(path);
 }  
 }
+
+export const getFileName = (filename: string) => new Date().getTime() + '-' + filename

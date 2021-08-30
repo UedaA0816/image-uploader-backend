@@ -7,16 +7,16 @@ import { logger } from "./logger";
 import { upload_task } from "./tasks/upload_task"
 import { multer_error_handling } from './tasks/multer_error_handling';
 
-import { makeTempDirectory } from './utils'
+import { getFileName, makeTempDirectory } from './utils'
 import AWS from 'aws-sdk';
 
-const credentials = new AWS.SharedIniFileCredentials({profile: 'nvc-study'});
+const credentials = new AWS.SharedIniFileCredentials({profile: process.env.AWS_PROFILE||""});
 AWS.config.credentials = credentials;
 
 const app: Express = express()
 
 const tempDirectory = '/tmp/image-uploader';
-makeTempDirectory(tempDirectory)
+// makeTempDirectory(tempDirectory)
 
 // ファイル保存用
 const storage = multer.diskStorage({
@@ -30,12 +30,10 @@ const storage = multer.diskStorage({
 
 const ram = multer.memoryStorage()
 
-function getFileName(filename: string) {
-  
-  return new Date().getTime() + '-' + filename
-}
 const _3MB = 3 * 1024 * 1024
-const upload = multer({ storage: storage})
+
+// const upload = multer({ storage: storage})
+const upload = multer({ storage: ram})
 // const upload = multer({ storage: ram , limits:{fileSize:_3MB}})
 
 const port = process.env.PORT || 3000
