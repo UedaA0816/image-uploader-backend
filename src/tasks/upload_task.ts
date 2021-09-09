@@ -34,14 +34,14 @@ export const upload_task = async (req:Request, res:Response) => {
     Body:body,
     ACL:"public-read"
   }
-  s3.putObject(params,(err, data) => {
+  s3.upload(params,(err, data) => {
     if (err) {
       logger.debug(err)
       res.status(500).send({code:50000})
       return
     }
     
-    const resource_url = `https://${bucket}.s3.ap-northeast-1.amazonaws.com/${key}`
+    const resource_url = data.Location
 
     res.send({code:20000,url:resource_url})
     
